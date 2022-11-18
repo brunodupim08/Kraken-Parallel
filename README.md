@@ -1,7 +1,6 @@
 # Kraken-Parallel
 Allows you to run a command or multiple scripts in parallel.
 
-
     usage:
             kp [OPTION] [FIXED-COMMAND] [FILE-LIST-COMMAND]
     
