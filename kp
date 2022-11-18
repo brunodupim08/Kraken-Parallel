@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+#===============================================================#
+#                       Kraken-Parallel                         #
+# Author: Bruno Dupim                                           #
+# Project: https://github.com/brunodupim08/Kraken-Parallel.git  #
+#===============================================================#
+
+source ./lib/Kraken-Parallel.sh
+source ./lib/usage.sh
+source ./lib/version.sh
+
+version="v0.2.0-alpha"
+limit_parallel=10
+script="script_silent"
+
+#Option.
+[[ "$#" -eq "0" ]] && usage
+indf=0
+while [[ "$#" -ne "0" ]]; do
+    case "${1}" in
+        --version) version
+        ;;
+        -h|--help) usage
+        ;;
+        -m|--max-parallel) #limit_parallel
+            shift
+            limit_parallel=${1}
+            shift
+        ;;
+        -v|--verbose) script="script_verbose"
+        shift
+        ;;
+        -c) #Fixed Command
+            shift
+            fixed_command_input=${1}
+            shift
+        ;;
+        -f) #Files
+            shift
+            while [[ -e "${1}" ]]; do
+                if [[ ! -d "${1}" ]]; then
+                    list_of_files_input[${indf}]=${1}
+                    ((indf++))
+                fi
+                shift
+            done
+        ;;
+        *) #usage
+            usage
+        ;;
+    esac
+done
+[[ ! -n "${list_of_files_input[@]}" ]] && usage || tentacles
