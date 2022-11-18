@@ -1,14 +1,6 @@
 # Kraken-Parallel
 Allows you to run a command or multiple scripts in parallel.
 
-To start without installing use:
-
-    ./kp
- or
-    
-    bash kp
-
-.
 
     usage:
             kp [OPTION] [FIXED-COMMAND] [FILE-LIST-COMMAND]
