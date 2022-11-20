@@ -4,13 +4,16 @@
 #list_of_files_input must be informed before starting octopus.
 #limit_parallel must be informed before starting octopus.
 
-
 function log(){
-   echo -e "$(date)\nFile: $file_input\n" > op-log-$file.txt
+    export index_file=0         #Current file index.
+
+    ((index_file++))
+    echo -e "\n$fixed_command_input $file_input"
+    echo -e "$(date)\nFile: $file_input\n" > op-log-$index_file.txt
 }
 
-function progress_silent(){ #Display
-    echo -ne "\\r[ $total_lines / $index_line ][ Tentacles: $limit_parallel / $active_parallel ]"
+function progress_silent(){     #Display.
+    echo -ne "\\r[ $total_lines / $index_line ][ Max: $limit_parallel | Actives: $active_parallel ]"
 }
 
 function active_tentacles(){
@@ -21,13 +24,13 @@ function active_tentacles(){
     active_parallel="$((${#jobs[@]}-1))"
 }
 
-function script_verbose(){
+function script_verbose(){      #Verbose mode.
     ((index_line++))
-    $({ $fixed_command_input $line_input;} || { 2>> op-log-$file.txt; echo -e "line $index_line error!!!\n\n" >> op-log-$file.txt;}) &
+    $({ $fixed_command_input $line_input;} || { 2>> op-log-$index_file.txt; echo -e "line $index_line error!!!\n\n" >> op-log-$index_file.txt;}) &
 }
-function script_silent(){
+function script_silent(){       #Silence mode.
     ((index_line++))
-    $({ $fixed_command_input $line_input 2> /dev/null ;} || { 2>> op-log-$file.txt; echo -e "line $index_line error!!!\n\n" >> op-log-$file.txt;}) &
+    $({ $fixed_command_input $line_input 2> /dev/null ;} || { 2>> op-log-$index_file.txt; echo -e "line $index_line error!!!\n\n" >> op-log-$index_file.txt;}) &
 }
 
 function tentacles(){
@@ -35,24 +38,23 @@ function tentacles(){
     export index_line           #Shows the index of line current.
     export line_input           #Shows the line current.
     export file_input           #Shows the file current.
-    export file=0
-    
 
+    #Test if the process will be silent.
+    if [[ "$script" = "script_silent" ]]; then
+        progress="progress_silent"
+    else
+        progress=""
+    fi
+    #Start program with all passed parameters.
     for file_input in "${list_of_files_input[@]}"; do
-        ((file++))
-        total_lines=$(wc --lines < $file_input)
         index_line=0
+        total_lines=$(wc --lines < $file_input)
         log
-        echo -e "\n$fixed_command_input $file_input"
-        if [[ "$script" = "script_silent" ]]; then
-            progress="progress_silent"
-        else
-            progress=""
-        fi
+        #Read the lines of the current file one by one and start.
         while IFS= read -r line_input; do
-            #Ignore null lines
+            #Ignore null lines.
             [[ -n "$line_input" ]] && shift;
-            #Run
+            #Run.
             while true; do
                 active_tentacles
                 $progress
@@ -62,7 +64,7 @@ function tentacles(){
                 if [[ "$index_line" -lt "$total_lines" && "0" -eq "$limit_parallel" ]]; then
                     $script
                     [[ "$total_lines" -ne "$index_line" ]] && break;
-                #Starts with parallel limit
+                #Starts with parallel limit.
                 elif [[ "$index_line" -lt "$total_lines" && "$active_parallel" -lt "$limit_parallel" ]]; then
                     $script
                     [[ "$total_lines" -ne "$index_line" ]] && break;
@@ -70,7 +72,9 @@ function tentacles(){
                 sleep 0.5s
             done
         done < "$file_input"
-        echo -e "    Concluded !!!" &
+        echo -e "    Concluded !!!"
     done
+    #A completion alert sounds and exits.
+    echo -e "\a"
     exit 0
 }
