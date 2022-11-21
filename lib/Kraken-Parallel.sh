@@ -25,7 +25,7 @@ function active_tentacles(){
 
 function script_verbose(){      #Verbose mode.
     ((index_line++))
-    $({ $fixed_command_input $line_input | 2>> $tmp_log/$name_file.txt || echo -e "line $index_line !!!\n" >> $tmp_log/$name_file.txt;}) &
+    $({ $fixed_command_input $line_input 2>> $tmp_log/$name_file.txt || echo -e "line $index_line !!!\n" >> $tmp_log/$name_file.txt;}) &
 }
 function script_silent(){       #Silence mode.
     ((index_line++))
