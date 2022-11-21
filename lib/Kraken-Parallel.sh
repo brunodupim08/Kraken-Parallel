@@ -1,14 +1,14 @@
 #Read me
+#tmp_log must be informed before starting octopus.
 #script must be informed before starting octopus.
 #fixed_command_input must be informed before starting octopus.
 #list_of_files_input must be informed before starting octopus.
 #limit_parallel must be informed before starting octopus.
 
 function log(){
-    name_file="$()"
-    export new_line_log=""
+    name_file="banana"
 
-    echo -e "\n+++++++++++++++++++++++\n$(date)\nFile: $file_input\n" > $tmp_log/$name_file.txt
+    echo -e "++++++++++++++++++++++++++++\n$(date)\nFile: $file_input Total lines: $total_lines\n" >> $tmp_log/$name_file.txt
 }
 
 function progress_silent(){     #Display.
@@ -19,8 +19,8 @@ function active_tentacles(){
     export active_parallel      #Shows the total of commands running in the background.
     
     #It counts the number of PIDS in the background more the current one.
-    jobs=($(jobs -p)) #-1
-    active_parallel="$((${#jobs[@]}-1))"
+    jobs=($(jobs -r -p))
+    active_parallel="${#jobs[@]}"
 }
 
 function script_verbose(){      #Verbose mode.
