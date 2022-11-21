@@ -42,7 +42,7 @@ function tentacles(){
     if [[ "$script" = "script_silent" ]]; then
         progress="progress_silent"
     else
-        progress="progress_silent"
+        progress=""
     fi
     #Tests if the log folder exists, if it doesn't exist it creates it.
     if [[ ! -d "$tmp_log" ]]; then
