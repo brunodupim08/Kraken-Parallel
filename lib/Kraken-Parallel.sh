@@ -5,11 +5,10 @@
 #limit_parallel must be informed before starting octopus.
 
 function log(){
-    export index_file=0         #Current file index.
+    name_file="$()"
+    export new_line_log=""
 
-    ((index_file++))
-    echo -e "\n$fixed_command_input $file_input"
-    echo -e "$(date)\nFile: $file_input\n" > op-log-$index_file.txt
+    echo -e "\n+++++++++++++++++++++++\n$(date)\nFile: $file_input\n" > $tmp_log/$name_file.txt
 }
 
 function progress_silent(){     #Display.
@@ -26,11 +25,11 @@ function active_tentacles(){
 
 function script_verbose(){      #Verbose mode.
     ((index_line++))
-    $({ $fixed_command_input $line_input;} || { 2>> op-log-$index_file.txt; echo -e "line $index_line error!!!\n\n" >> op-log-$index_file.txt;}) &
+    $({ $fixed_command_input $line_input | 2>> $tmp_log/$name_file.txt || echo -e "line $index_line !!!\n" >> $tmp_log/$name_file.txt;}) &
 }
 function script_silent(){       #Silence mode.
     ((index_line++))
-    $({ $fixed_command_input $line_input 2> /dev/null ;} || { 2>> op-log-$index_file.txt; echo -e "line $index_line error!!!\n\n" >> op-log-$index_file.txt;}) &
+    $({ $fixed_command_input $line_input 2>> $tmp_log/$name_file.txt || echo -e "line $index_line !!!\n" >> $tmp_log/$name_file.txt;}) &
 }
 
 function tentacles(){
@@ -43,13 +42,18 @@ function tentacles(){
     if [[ "$script" = "script_silent" ]]; then
         progress="progress_silent"
     else
-        progress=""
+        progress="progress_silent"
+    fi
+    #Tests if the log folder exists, if it doesn't exist it creates it.
+    if [[ ! -d "$tmp_log" ]]; then
+        mkdir -p $tmp_log
     fi
     #Start program with all passed parameters.
     for file_input in "${list_of_files_input[@]}"; do
         index_line=0
         total_lines=$(wc --lines < $file_input)
         log
+        echo -e "\n$fixed_command_input $file_input"
         #Read the lines of the current file one by one and start.
         while IFS= read -r line_input; do
             #Ignore null lines.
@@ -75,6 +79,6 @@ function tentacles(){
         echo -e "    Concluded !!!"
     done
     #A completion alert sounds and exits.
-    echo -e "\a"
+    echo -e "\n     # Logs created in path $tmp_log.\n\a"
     exit 0
 }

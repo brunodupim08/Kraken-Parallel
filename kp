@@ -10,6 +10,7 @@ source ./lib/Kraken-Parallel.sh
 source ./lib/usage.sh
 source ./lib/version.sh
 
+tmp_log="/tmp/op-log"
 version="v0.2.0-alpha"
 limit_parallel=10
 script="script_silent"
