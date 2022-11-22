@@ -8,7 +8,7 @@
 function log(){
     name_file="banana"
 
-    echo -e "++++++++++++++++++++++++++++\n$(date)\nFile: $file_input Total lines: $total_lines\n" >> $tmp_log/$name_file.txt
+    echo -e "++++++++++++++++++++++++++++\n$(date)\nFile: $file_input Total lines: $total_lines\n++++++++++++++++++++++++++++\n" >> $tmp_log/$name_file.txt
 }
 
 function progress_silent(){     #Display.
@@ -25,11 +25,11 @@ function active_tentacles(){
 
 function script_verbose(){      #Verbose mode.
     ((index_line++))
-    $({ $fixed_command_input $line_input 2>> $tmp_log/$name_file.txt || echo -e "line $index_line !!!\n" >> $tmp_log/$name_file.txt;}) &
+    $({ $fixed_command_input $line_input 2>> $tmp_log/$name_file.txt || echo -e "line $index_line !!!\n============================\n" >> $tmp_log/$name_file.txt;}) &
 }
 function script_silent(){       #Silence mode.
     ((index_line++))
-    $({ $fixed_command_input $line_input 2>> $tmp_log/$name_file.txt || echo -e "line $index_line !!!\n" >> $tmp_log/$name_file.txt;}) &
+    $({ $fixed_command_input $line_input 2>> $tmp_log/$name_file.txt || echo -e "line $index_line !!!\n============================\n" >> $tmp_log/$name_file.txt;}) &
 }
 
 function tentacles(){
