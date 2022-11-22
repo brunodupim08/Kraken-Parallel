@@ -8,7 +8,7 @@
 function log(){
     name_file="banana"
 
-    echo -e "++++++++++++++++++++++++++++\n$(date)\nFile: $file_input Total lines: $total_lines\n++++++++++++++++++++++++++++\n" >> $tmp_log/$name_file.txt
+    echo -e "++++++++++++++++++++++++++++\n$(date)\nFile: $file_input\nTotal lines: $total_lines\n++++++++++++++++++++++++++++\n" >> $tmp_log/$name_file.txt
 }
 
 function progress_silent(){     #Display.
@@ -25,11 +25,11 @@ function active_tentacles(){
 
 function script_verbose(){      #Verbose mode.
     ((index_line++))
-    $({ $fixed_command_input $line_input 2>> $tmp_log/$name_file.txt || echo -e "line $index_line !!!\n============================\n" >> $tmp_log/$name_file.txt;}) &
+    echo -e "Line:$index_line\nCommand: $fixed_command_input $line_input\n$($fixed_command_input $line_input 2>&1)\n" | tee -a $tmp_log/$name_file.txt &
 }
 function script_silent(){       #Silence mode.
     ((index_line++))
-    $({ $fixed_command_input $line_input 2>> $tmp_log/$name_file.txt || echo -e "line $index_line !!!\n============================\n" >> $tmp_log/$name_file.txt;}) &
+    echo -e "Line:$index_line\nCommand: $fixed_command_input $line_input\n$($fixed_command_input $line_input 2>&1)\n" >> $tmp_log/$name_file.txt &
 }
 
 function tentacles(){
@@ -56,8 +56,6 @@ function tentacles(){
         echo -e "\n$fixed_command_input $file_input"
         #Read the lines of the current file one by one and start.
         while IFS= read -r line_input; do
-            #Ignore null lines.
-            [[ -n "$line_input" ]] && shift;
             #Run.
             while true; do
                 active_tentacles
