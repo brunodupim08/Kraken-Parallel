@@ -3,7 +3,7 @@
 source Kraken-Parallel.sh
 
 log_path="/tmp/op-log"
-version="v0.2.0-alpha"
+version="v0.9-beta"
 limit_parallel=10
 
 function version(){
