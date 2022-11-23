@@ -29,6 +29,7 @@ while [[ "$#" -ne "0" ]]; do
             exit 0
         ;;
         -h|--help) cat usage.txt
+            echo -e "\n"
             exit 0
         ;;
         -m|--max-parallel) #limit_parallel
