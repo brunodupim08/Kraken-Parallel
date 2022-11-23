@@ -28,7 +28,8 @@ while [[ "$#" -ne "0" ]]; do
         --version) version
             exit 0
         ;;
-        -h|--help) cat usage.txt
+        -h|--help) 
+            cat usage.txt
             echo -e "\n"
             exit 0
         ;;
@@ -66,7 +67,8 @@ while [[ "$#" -ne "0" ]]; do
             done
         ;;
         *) #usage
-            usage
+            cat usage.txt
+            echo -e "\n"
             exit 1
         ;;
     esac
