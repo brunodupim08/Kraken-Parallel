@@ -1,6 +1,3 @@
-function usage(){
-    echo "
-
     usage:
             kp [OPTION] [FIXED-COMMAND] [FILE-LIST-COMMAND]
     
@@ -16,19 +13,26 @@ function usage(){
                 
                 kp -f command-list1.txt command-list2.txt
 
+    Note: Commands that require confirmation, need to add -y or -n at the end of the command.
 
-    -m|--max-parallel)      limit parallel.
+
+    -m|--max-parallel)      Limit parallel.
                             Limits the maximum number of commands in the background.
                             By default the limit is 10 commands.
                             If the value is 0, it will be illimited and can lock your system if you have a very large list of commands.
     
-    -c)                     Fixed Command
+    -c)                     Fixed Command.
                             Start command with options.
 
     -f)                     File Path for Script
                             Search and read the script file.
-                            
 
-"
-    exit 1
-}
+
+    -v|--verbose)           Verbose mode.
+
+    --new-log)              New log file.
+                            Overwrite previous log.
+
+    --log-path)             Path to log file.
+
+    --version)              Show version.
