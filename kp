@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source Kraken-Parallel.sh
+source /opt/Kraken-Parallel/Kraken-Parallel.sh
 
 log_path="/tmp/op-log"
 version="v0.9-beta"
@@ -17,8 +17,25 @@ function version(){
  Project: https://github.com/brunodupim08/Kraken-Parallel.git
 "
 }
+function usage(){
+    cat /opt/Kraken-Parallel/usage.txt
+    echo -e "\n"
+    exit 0
+}
+function options_error(){    #usage error
+	echo '
+	Parameter error !!!
+	usage:
+		kp [OPTION] [FIXED-COMMAND] [FILE-LIST-COMMAND]
+	
+		kp [OPTION] [FILE-LIST-COMMAND]
+		
+	Try "kp --help" for more options.
+	'
+	exit 1
+}
 #Option.
-[[ "$#" -eq "0" ]] && usage
+[[ "$#" -eq "0" ]] && options_error
 indf=0
 while [[ "$#" -ne "0" ]]; do
     if [[ -z "$1" ]]; then
@@ -29,9 +46,7 @@ while [[ "$#" -ne "0" ]]; do
             exit 0
         ;;
         -h|--help) 
-            cat usage.txt
-            echo -e "\n"
-            exit 0
+            usage
         ;;
         -m|--max-parallel) #limit_parallel
             shift
@@ -66,11 +81,9 @@ while [[ "$#" -ne "0" ]]; do
                 shift
             done
         ;;
-        *) #usage
-            cat usage.txt
-            echo -e "\n"
-            exit 1
+        *)
+            options_error
         ;;
     esac
 done
-[[ ! -n "${list_of_files_input[@]}" ]] && usage || tentacles
+[[ ! -n "${list_of_files_input[@]}" ]] && options_error || tentacles
