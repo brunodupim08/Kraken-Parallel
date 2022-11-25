@@ -1,54 +1,29 @@
 #!/usr/bin/env bash
 
-source /opt/Kraken-Parallel/Kraken-Parallel.sh
+source Kraken-Parallel.sh
 
-log_path="/tmp/op-log"
-version="v0.9-beta"
+log_path="/tmp"
+version="v1.0.0"
 limit_parallel=10
+verbose=false
+new_log=false
+no_log=false
 
-function version(){
-    echo "
-#=================#
-# Kraken-Parallel #
-#=================#
-
- Version: $version
- Author: Bruno Dupim
- Project: https://github.com/brunodupim08/Kraken-Parallel.git
-"
-}
-function usage(){
-    cat /opt/Kraken-Parallel/usage.txt
-    echo -e "\n"
-    exit 0
-}
-function options_error(){    #usage error
-	echo '
-	Parameter error !!!
-	usage:
-		kp [OPTION] [FIXED-COMMAND] [FILE-LIST-COMMAND]
-	
-		kp [OPTION] [FILE-LIST-COMMAND]
-		
-	Try "kp --help" for more options.
-	'
-	exit 1
-}
 #Option.
-[[ "$#" -eq "0" ]] && options_error
+[[ "${#}" -eq "0" ]] && error_1
 indf=0
-while [[ "$#" -ne "0" ]]; do
-    if [[ -z "$1" ]]; then
+while [[ "${#}" -ne "0" ]]; do
+    if [[ -z "${1}" ]]; then
         shift
     fi
     case "${1}" in
-        --version) version
-            exit 0
+        --version) 
+            version
         ;;
         -h|--help) 
             usage
         ;;
-        -m|--max-parallel) #limit_parallel
+        -m|--max-parallel) 
             shift
             limit_parallel=${1}
             shift
@@ -61,17 +36,22 @@ while [[ "$#" -ne "0" ]]; do
             new_log=true
             shift
         ;;
+        --no-log) 
+            shift
+            no_log=true
+            shift
+        ;;
         --log-path) 
             shift
             log_path=${1}
             shift
         ;;
-        -c) #Fixed Command
+        -c) 
             shift
             fixed_command_input=${1}
             shift
         ;;
-        -f) #Files
+        -f) 
             shift
             while [[ -e "${1}" ]]; do
                 if [[ ! -d "${1}" ]]; then
@@ -82,8 +62,8 @@ while [[ "$#" -ne "0" ]]; do
             done
         ;;
         *)
-            options_error
+            error_1
         ;;
     esac
 done
-[[ ! -n "${list_of_files_input[@]}" ]] && options_error || tentacles
+tentacles

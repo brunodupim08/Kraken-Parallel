@@ -6,12 +6,6 @@
                 kp -m 1000 -c 'wget -q -x' -f ~/urls/file-01.txt
                 
                 kp -c 'wget' -f file-01.txt file-02.txt file-03.txt
-            
-            kp [OPTION] [FILE-LIST-COMMAND]
-
-                kp -f command-list.txt
-                
-                kp -f command-list1.txt command-list2.txt
 
     Note: Commands that require confirmation, need to add -y or -n at the end of the command.
 
