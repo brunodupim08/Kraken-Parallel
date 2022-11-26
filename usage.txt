@@ -38,3 +38,6 @@
                             Overwrite previous log.
 
     --log-path)             Path to log file.
+
+    --null-lines)           Not ignore null lines.
+                            By default, null lines will be ignored.
