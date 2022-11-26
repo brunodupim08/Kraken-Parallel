@@ -36,13 +36,17 @@ while [[ "${#}" -ne "0" ]]; do
             new_log=true
             shift
         ;;
-        --no-log) 
+        --force-y)
+            no_dialog=true
             shift
+        ;;
+        --no-log) 
             no_log=true
             shift
         ;;
         --log-path) 
             shift
+            log_path_on=true
             log_path=${1}
             shift
         ;;
@@ -60,6 +64,7 @@ while [[ "${#}" -ne "0" ]]; do
                 fi
                 shift
             done
+            shift
         ;;
         *)
             error_1
