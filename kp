@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
+#set -x
+
 source Kraken-Parallel.sh
 
 log_path="/tmp"
 version="v1.0.0"
+#usage="$PWD/usage.txt"
 limit_parallel=10
 verbose=false
 new_log=false
