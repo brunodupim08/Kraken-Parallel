@@ -10,30 +10,33 @@
 #================= functions information =================#
 function usage(){
     echo "
-     usage:
-            kp [OPTION] [FIXED-COMMAND] [FILE-LIST-COMMAND]
+    usage:
+            kraken-parallel [OPTION] [FIXED-COMMAND] [FILE-LIST-COMMAND]
     
-                kp -c 'wget -x' -f urls.txt
+                kraken-parallel -c 'wget -x' -f urls.txt
 
-                kp -m 1000 -c 'wget -c -x' -f ~/urls/file-01.txt
+                kraken-parallel -m 1000 -c 'wget -c -x' -f ~/urls/file-01.txt
                 
-                kp -c 'wget' -f file-01.txt file-02.txt file-03.txt
+                kraken-parallel -c 'wget' -f file-01.txt file-02.txt file-03.txt
 
-    Note: Commands that require confirmation, need to add -y or -n at the end of the command.
+    Note: 
+            Kraken-Parallel will force -y at the end of all commands
+            to have no confirmation prompts.
 
+    -c|--fixed-command)     Fixed Command.
+                            Start command with options.
+
+    -f|--files)             File Path for Script
+                            Search and read the script file.
+
+    --version)              Show version.
 
     -m|--max-parallel)      Limit parallel.
                             Limits the maximum number of commands in the background.
                             By default the limit is 10 commands.
-                            If the value is 0, it will be illimited and can lock your system if you have a very large list of commands.
+                            If the value is 0, it will be illimited and can lock your
+                            system if you have a very large list of commands.
     
-    -c)                     Fixed Command.
-                            Start command with options.
-
-    -f)                     File Path for Script
-                            Search and read the script file.
-
-
     -v|--verbose)           Verbose mode.
 
     --no-log)               Not create log.
@@ -43,7 +46,6 @@ function usage(){
 
     --log-path)             Path to log file.
 
-    --version)              Show version.
     "
     exit 0
 }

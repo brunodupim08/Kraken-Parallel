@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
-source Kraken-Parallel.sh
+source kraken-parallel-tentacles.sh
 
 log_path="/tmp"
 version="v1.0.0"
-#usage="$PWD/usage.txt"
-max_parallel=10
+max_parallel=20
 verbose=false
 new_log=false
 no_log=false
@@ -47,12 +46,12 @@ while [[ "${#}" -ne "0" ]]; do
             log_path=${1}
             shift
         ;;
-        -c) 
+        -c|--fixed-command) 
             shift
             fixed_command_input=${1}
             shift
         ;;
-        -f) 
+        -f|--files) 
             shift
             while [[ -e "${1}" ]]; do
                 if [[ ! -d "${1}" ]]; then
