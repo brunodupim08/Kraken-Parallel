@@ -92,9 +92,10 @@ function error_1(){    #usage error.
 	echo "
 	Parameter error !!!
 	usage:
+
 		kraken-parallel [OPTION] [FIXED-COMMAND] [FILE-LIST-COMMAND]
 		
-	Try "kraken-parallel --help" for more options.
+	Try "kraken-parallel -h or --help" for more options.
 	"
     alert_sound
 	exit 1
@@ -102,8 +103,10 @@ function error_1(){    #usage error.
 function error_2(){     #usage sudo in [FIXED-COMMAND].
     echo "
     Do not use sudo on [FIXED-COMMAND] or [FILE-LIST-COMMAND]
-    Run sudo kraken-parallel [OPTION] [FIXED-COMMAND] [FILE-LIST-COMMAND]
-    Try "kraken-parallel --help" for more options.
+
+        Run sudo kraken-parallel [OPTION] [FIXED-COMMAND] [FILE-LIST-COMMAND]
+
+    Try "kraken-parallel -h or --help" for more options.
     "
     alert_sound
     exit 2
@@ -111,37 +114,51 @@ function error_2(){     #usage sudo in [FIXED-COMMAND].
 function error_3(){     #command conflict.
     echo "
     Parameter error !!!
-    Do not use --no-log with --new-log and --log-path.
-    Try "kraken-parallel --help" for more options.
+
+        Do not use --no-log with --new-log and --log-path.
+
+    Try "kraken-parallel -h or --help" for more options.
     "
     alert_sound
     exit 3
 }
 function error_4(){     #max-limit error
     echo "Error 4 !!!
-    --max-limit accepts only integers greater than or equal to 0.
+
+        --max-limit accepts only integers greater than or equal to 0.
+
+    Try "kraken-parallel -h or --help" for more options.
     "
     alert_sound
     exit 4
 }
 function error_5(){     #directory conflict.
     echo -e "Error 5 !!!
-    Unable to create directory ${dir_log}
+
+        Unable to create directory ${dir_log}
+
     Make sure you have permissions for this directory.
+    Try "kraken-parallel -h or --help" for more options.
     "
     alert_sound
     exit 5
 }
 function error_6(){     #directory conflict.
-    echo -e "
-    " $log_path " it is not a directory.
+    echo -e "Error 6 !!!
+
+        " $log_path " it is not a directory.
+
+    Try "kraken-parallel -h or --help" for more options.
     "
     alert_sound
     exit 6
 }
 function error_13(){
     echo "Error 13 !!!
-    Internal error.
+
+        Internal error.
+
+    Try "kraken-parallel -h or --help" for more options.
     "
     alert_sound
     exit 13
