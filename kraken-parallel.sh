@@ -2,12 +2,13 @@
 
 source kraken-parallel-tentacles.sh
 
-log_path="/tmp"
 version="v1.0.0"
-max_parallel=20
-verbose=false
+log_path="/tmp"
 new_log=false
 no_log=false
+verbose=false
+max_parallel=20
+null_lines=false
 
 #Option.
 [[ "${#}" -eq "0" ]] && error_1
@@ -38,6 +39,10 @@ while [[ "${#}" -ne "0" ]]; do
         ;;
         --force-y)
             no_dialog=true
+            shift
+        ;;
+        --null-lines)
+            null_lines=true
             shift
         ;;
         --no-log) 

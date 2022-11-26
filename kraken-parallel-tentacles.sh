@@ -1,11 +1,13 @@
 #Read me
-#log_path must be informed before starting octopus.
-#new_log must be called before starting octopus
-#no_log must be informed before starting octopus.
-#verbose must be informed before starting octopus.
+#version must be informed before starting octopus.
 #fixed_command_input must be informed before starting octopus.
 #list_of_files_input must be informed before starting octopus.
+#log_path must be informed before starting octopus.
+#new_log must be called before starting octopus.
+#no_log must be informed before starting octopus.
+#verbose must be informed before starting octopus.
 #max_parallel must be informed before starting octopus.
+#null_lines must be notified before starting octopus.
 
 #================= functions information =================#
 function usage(){
@@ -50,6 +52,9 @@ function usage(){
                             Overwrite previous log.
 
     --log-path)             Path to log file.
+
+    --null-lines)           Not ignore null lines.
+                            By default, null lines will be ignored.
 
     "
     exit 0
@@ -239,21 +244,20 @@ function no_log(){
 function no_log_verbose(){
     (
     task=$($subshell_command 2>&1)
-    sleep 0,1s
+    sleep 1s
     echo -e "[ $(date) ]\nLine:$index_line\n$task\n"
     ) &
 }
 function log_verbose(){
     (
     task=$($subshell_command 2>&1)
-    sleep 0,1s
+    sleep 1s
     echo -e "[ $(date) ]\nLine:$index_line\n$task\n" | tee -a "${dir_log}/line-$index_line.log"
     ) &
 }
 function log_silent(){
     (
     task=$($subshell_command 2>&1)
-    sleep 0,1s
     echo -e "[ $(date) ]\nLine:$index_line\n$task\n" >> "${dir_log}/line-$index_line.log"
     ) &
 }
@@ -296,14 +300,16 @@ function tentacles(){
                 if [[ "$index_line" -lt "$total_lines" && "$max_parallel" -eq "0" ]]; then
                     $progress
                     ((index_line++))
-                    [[ -z "$line_input" ]] && break;
+                    #Jump task if line_input is null.
+                    [[ -z "$line_input" && $null_lines = false ]] && break;
                     $subshell
                     break
                 #Starts with parallel limit.
                 elif [[ "$index_line" -lt "$total_lines" && "$active_parallel" -le "$max_parallel" ]]; then
                     $progress
                     ((index_line++))
-                    [[ -z "$line_input" ]] && break;
+                    #Jump task if line_input is null.
+                    [[ -z "$line_input" && $null_lines = false ]] && break;
                     $subshell
                     break
                 #Wait all the parallel commands finish and finish.
