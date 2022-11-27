@@ -14,9 +14,6 @@ null_lines=false
 [[ "${#}" -eq "0" ]] && error_1
 indf=0
 while [[ "${#}" -ne "0" ]]; do
-    if [[ -z "${1}" ]]; then
-        shift
-    fi
     case "${1}" in
         --version) 
             version
@@ -25,8 +22,7 @@ while [[ "${#}" -ne "0" ]]; do
             usage
         ;;
         -m|--max-parallel) 
-            shift
-            max_parallel=${1}
+            max_parallel=${2}
             shift
         ;;
         -v|--verbose) 
@@ -50,30 +46,29 @@ while [[ "${#}" -ne "0" ]]; do
             shift
         ;;
         --log-path) 
-            shift
             log_path_on=true
-            log_path=${1}
+            log_path=${2}
             shift
         ;;
         -c|--fixed-command) 
-            shift
-            fixed_command_input=${1}
+            fixed_command_input=${2}
             shift
         ;;
         -f|--files) 
-            shift
-            while [[ -e "${1}" ]]; do
-                if [[ ! -d "${1}" ]]; then
-                    list_of_files_input[${indf}]=${1}
+            while true; do
+                if [[ ! -d "${2}" && -e "${2}" ]]; then
+                    list_of_files_input[${indf}]=${2}
                     ((indf++))
+                else
+                    break
                 fi
                 shift
             done
-            shift
         ;;
         *)
             error_1
         ;;
     esac
+    shift
 done
 test_options
