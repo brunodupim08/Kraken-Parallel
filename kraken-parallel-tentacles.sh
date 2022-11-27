@@ -22,7 +22,7 @@ function usage(){
                 kraken-parallel -c 'wget' -f file-01.txt file-02.txt file-03.txt
 
     Note: 
-            If the command or program requires "-y" confirmation, use --no-dialog.
+            If the command or program requires "-y" confirmation, use --force-y.
 
 
     -c|--fixed-command)     Fixed Command.
