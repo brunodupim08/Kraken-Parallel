@@ -2,7 +2,7 @@
 
 source /opt/kraken-parallel/kraken-parallel-tentacles.sh
 
-version="v1.0.0"
+version="v1.0.1"
 log_path="/tmp"
 new_log=false
 no_log=false
