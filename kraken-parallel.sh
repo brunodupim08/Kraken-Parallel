@@ -27,23 +27,18 @@ while [[ "${#}" -ne "0" ]]; do
         ;;
         -v|--verbose) 
             verbose=true
-            shift
         ;;
         --new-log)
             new_log=true
-            shift
         ;;
         --force-y)
             no_dialog=true
-            shift
         ;;
         --null-lines)
             null_lines=true
-            shift
         ;;
         --no-log) 
             no_log=true
-            shift
         ;;
         --log-path) 
             log_path_on=true
