@@ -28,7 +28,7 @@ This allows for greater use of cpu and cores to perform repetitive tasks with la
 
     -m|--max-parallel)      Limit parallel.
                             Limits the maximum number of commands in the background.
-                            By default the limit is 10 commands.
+                            By default the limit is 20 commands.
                             If the value is 0, it will be illimited and can lock your
                             system if you have a very large list of commands.
     
