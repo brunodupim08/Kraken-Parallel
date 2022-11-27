@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source kraken-parallel-tentacles.sh
+source /opt/kraken-parallel/kraken-parallel-tentacles.sh
 
 version="v1.0.0"
 log_path="/tmp"
