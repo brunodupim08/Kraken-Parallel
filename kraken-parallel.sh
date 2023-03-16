@@ -11,7 +11,7 @@
 #max_parallel must be informed before starting octopus.
 #null_lines must be notified before starting octopus.
 
-version="v1.0.1"
+version="v1.1.0"
 log_path="/tmp"
 new_log=false
 no_log=false
@@ -289,7 +289,14 @@ function log_silent(){
     ) &
 }
 function progress(){     #Display.
-    echo -ne "\\r[ $total_lines / $index_line ][ Max: $max_parallel / Actives: $active_parallel ]"
+    
+    BAR_CHAR="####################"
+    BAR_WIDTH=20
+    percent=$(( index_line * 100 / total_lines ))
+
+    local bar=$(printf "%-${BAR_WIDTH}s" "${BAR_CHAR:0:$(( index_line * BAR_WIDTH / total_lines ))}")
+    printf "Total [\033[1m%s\033[0m] [Max: \033[1m%s\033[0m / Actives: \033[1;32m%s\033[0m] [%s] %d%%\r" "$total_lines" "$max_parallel" "$active_parallel" "$bar" "$percent"
+
 }
 #================= functions process =================#
 function active_tentacles(){
@@ -349,7 +356,6 @@ function tentacles(){
                 fi
             done
         done < "$file_input"
-        concluded_alert
     done
     #A completion alert sounds and exits.
     alert_sound
