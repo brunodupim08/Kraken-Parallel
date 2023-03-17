@@ -163,16 +163,6 @@ function error_6(){     #directory conflict.
     alert_sound
     exit 6
 }
-function error_13(){
-    echo "Error 13 !!!
-
-        Internal error.
-
-    Try "kraken-parallel -h or --help" for more options.
-    "
-    alert_sound
-    exit 13
-}
 #================= functions test =================#
 function test_options(){
     export progress     #Shows the progress command.
@@ -299,16 +289,8 @@ function progress(){     #Display.
 
 }
 #================= functions process =================#
-function active_tentacles(){
-    export active_parallel      #Shows the total of commands running in the background.
-    
-    #It counts the number of PIDS in the background more the current one.
-    jobs=($(jobs -r -p))
-    active_parallel="${#jobs[@]}"
-}
 function info_file_input(){
     export total_lines          #Shows the total lines of file.
-    export parallel=true        #Shows if the commands running in the background and continue loop.
     export index_line=0         #Shows the index of line current.
     export dir_log="${log_path}/Kraken-Parallel-${USER}/${file_input##*/}-log"  #directory log.
 
@@ -320,42 +302,28 @@ function tentacles(){
     export file_input           #Shows the file current.
     export subshell_command     #Shows the subshell command.
 
-    #Start program with all passed parameters.
-    for file_input in "${list_of_files_input[@]}"; do
+    subshell_command="$fixed_command_input $line_input $force_y"
+    active_parallel=0
+
+    for file_input in "${list_of_files_input[@]}"; do #Start program with all passed parameters.
         info_file_input
         log_options
-        #Read the lines of the current file one by one and start.
-        while IFS= read -r line_input || [[ ! "$parallel" = false ]]; do
-            subshell_command="$fixed_command_input $line_input $force_y"
-            #Run subshell in the background.
-            while true; do
-                active_tentacles
-                #Starts with the parallel limit 0.
-                if [[ "$index_line" -lt "$total_lines" && "$max_parallel" -eq "0" ]]; then
-                    $progress
-                    ((index_line++))
-                    #Jump task if line_input is null.
-                    [[ -z "$line_input" && $null_lines = false ]] && break;
-                    $subshell
-                    break
-                #Starts with parallel limit.
-                elif [[ "$index_line" -lt "$total_lines" && "$active_parallel" -le "$max_parallel" ]]; then
-                    $progress
-                    ((index_line++))
-                    #Jump task if line_input is null.
-                    [[ -z "$line_input" && $null_lines = false ]] && break;
-                    $subshell
-                    break
-                #Wait all the parallel commands finish and finish.
-                elif [[ "$index_line" -ge "$total_lines" && "$active_parallel" -eq "0" ]]; then
-                    $progress
-                    parallel=false
-                    break
-                else
-                    $progress
-                fi
+        while IFS= read -r line_input || [[ ! "$parallel" = false ]]; do #Read the lines of the current file one by one and start.
+            while [[ "$active_parallel" -ge "$max_parallel" ]]; do
+                wait -n
+                ((active_parallel--))
+                $progress
             done
+            if [[ "$max_parallel" -eq "0" ]]; then #Starts with the parallel limit 0.
+                subshell
+            else #Starts with parallel limit.
+                subshell
+            fi
+            ((active_parallel++))
+            ((index_line++))
+            $progress
         done < "$file_input"
+        active_parallel=0
     done
     #A completion alert sounds and exits.
     alert_sound
