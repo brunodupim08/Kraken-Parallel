@@ -18,6 +18,7 @@ no_log=false
 verbose=false
 max_parallel=20
 null_lines=false
+dir_log="${log_path}/Kraken-Parallel-${USER}/${file_input##*/}-log"  #directory log.
 
 #================= functions information =================#
 function usage(){
@@ -279,61 +280,59 @@ function log_silent(){
     ) &
 }
 function progress(){     #Display.
-    
-    BAR_CHAR="####################"
-    BAR_WIDTH=20
-    percent=$(( index_line * 100 / total_lines ))
+    percent=$(( $index_line * 100 / $total_lines ))
 
-    local bar=$(printf "%-${BAR_WIDTH}s" "${BAR_CHAR:0:$(( index_line * BAR_WIDTH / total_lines ))}")
-    printf "Total [\033[1m%s\033[0m] [Max: \033[1m%s\033[0m / Actives: \033[1;32m%s\033[0m] [%s] %d%%\r" "$total_lines" "$max_parallel" "$active_parallel" "$bar" "$percent"
+    printf "Total [\033[1m%s\033[0m] [Max: \033[1m%s\033[0m / \033[1;32m%s\033[0m Actives] \r" "$total_lines" "$max_parallel" "$active_parallel"
 
 }
 #================= functions process =================#
-function info_file_input(){
-    export total_lines          #Shows the total lines of file.
-    export index_line=0         #Shows the index of line current.
-    export dir_log="${log_path}/Kraken-Parallel-${USER}/${file_input##*/}-log"  #directory log.
-
-    total_lines=$(wc --lines < $file_input)
-    ((total_lines++))
+function active_tentacles(){
+    export active_parallel      #Shows the total of commands running in the background.
+    
+    #It counts the number of PIDS in the background more the current one.
+    jobs=($(jobs -r -p))
+    active_parallel="${#jobs[@]}"
 }
 function tentacles(){
     export line_input           #Shows the line current.
     export file_input           #Shows the file current.
     export subshell_command     #Shows the subshell command.
-
-    subshell_command="$fixed_command_input $line_input $force_y"
-    active_parallel=0
+    export index_line           #Shows the index of line current.
+    export total_lines          #Shows the total lines of file.
 
     for file_input in "${list_of_files_input[@]}"; do #Start program with all passed parameters.
-        info_file_input
+        index_line=0 
         log_options
-        while IFS= read -r line_input || [[ ! "$parallel" = false ]]; do #Read the lines of the current file one by one and start.
-            while [[ "$active_parallel" -ge "$max_parallel" ]]; do
-                wait -n
-                ((active_parallel--))
-                $progress
-            done
-            if [[ "$max_parallel" -eq "0" ]]; then #Starts with the parallel limit 0.
-                subshell
-            else #Starts with parallel limit.
-                subshell
+        while IFS= read -r line_input; do #Read the lines of the current file one by one and start.
+            subshell_command="$fixed_command_input $line_input $force_y"
+            total_lines=$(wc --lines < $file_input)
+            active_tentacles
+            if [[ "$max_parallel" -eq "0" ]]; then  #Starts with the parallel limit 0.
+                $subshell
+            else                                    #Starts with parallel limit.
+                while [[ "$active_parallel" -ge "$max_parallel" ]]; do
+                    wait -n
+                    active_tentacles
+                    $progress
+                done
+                $subshell
             fi
-            ((active_parallel++))
-            ((index_line++))
             $progress
         done < "$file_input"
+        while [[ "$active_parallel" -ne "0" ]]; do
+            wait -n
+            active_tentacles
+            $progress
+        done
         active_parallel=0
     done
+
     #A completion alert sounds and exits.
     alert_sound
     $log_alert
     exit 0
 }
-#=================================#
-
-
-#Option.
+#================= Option =================#
 [[ "${#}" -eq "0" ]] && error_1
 indf=0
 while [[ "${#}" -ne "0" ]]; do
