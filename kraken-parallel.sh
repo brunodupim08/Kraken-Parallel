@@ -18,7 +18,6 @@ no_log=false
 verbose=false
 max_parallel=20
 null_lines=false
-dir_log="${log_path}/Kraken-Parallel-${USER}/${file_input##*/}-log"  #directory log.
 
 #================= functions information =================#
 function usage(){
@@ -91,13 +90,6 @@ function concluded_alert(){
     "
     alert_sound
 }
-function log_alert(){
-    echo -e "
-    # Logs created in path ${log_path}/Kraken-Parallel-${USER}
-    "
-    alert_sound
-    exit 0
-}
 #================= functions errors messages =================#
 function error_1(){    #usage error.
 	echo "
@@ -167,7 +159,7 @@ function error_6(){     #directory conflict.
 #================= functions test =================#
 function test_options(){
     export progress     #Shows the progress command.
-    
+    export mode         #modo "silent", "verbose", "no_log_verbose" or "silent_no_log"
     #options null test.
     if [[ -z $fixed_command_input || -z "${list_of_files_input[@]}" ]]; then
         error_1
@@ -178,6 +170,7 @@ function test_options(){
     elif [[ -z "$log_path" || ! -d "$log_path" ]]; then
         error_6
     fi
+
     #Test max_parallel
     if [[ -n "$max_parallel" ]]; then
         re='^[0-9]+$'
@@ -190,20 +183,28 @@ function test_options(){
         error_4
     fi
 
+    # "silent", "verbose", "no_log_verbose" or "silent_no_log"
+    if [[ "$no_log" == true && "$verbose" == false ]]; then
+        mode="silent_no_log"
+        progress="progress"
+    elif [[ "$no_log" == true && "$verbose" == true ]]; then
+        mode="no_log_verbose"
+        progress=""
+    elif [[ "$verbose" == true ]]; then
+        mode="verbose"
+        progress=""
+    else
+        mode="silent"
+        progress="progress"
+    fi
+
     #Force -y.
     if [[ "$no_dialog" = true ]]; then
         force_y="-y"
     else
         force_y=""
     fi
-
-    #Test if the process will be silent.
-    if [[ "$verbose" = true ]]; then
-        progress=""
-    else
-        progress="progress"
-    fi
-
+    
     #sudo test.
     if (echo -e "$fixed_command_input" | grep -w 'sudo' && true);then
         error_2
@@ -219,78 +220,56 @@ function test_options(){
     #If none of the tests fail, it runs the program.
     tentacles
 }
-#================= functions log =================#
-function log_options(){
-    export subshell     #Shows the subshell command.
-    export log_alert
+#================= Run =================#
+function run_command() {
+    local log_file="${dir_log}/line-${index_line}.log"
 
-    #Show command end file input.
-    echo -e "\n{ $fixed_command_input } { $file_input }\n"
-    if [[ "$no_log" = false ]]; then
-        #Tests if the log folder exists, if it doesn't exist it creates it.
-        if [[ ! -d "$dir_log" ]]; then
-            mkdir -p -m 760 "${dir_log}" 2> /dev/null || error_5
-        fi
-
-        #Test if the log is verbose
-        if [[ "$verbose" = true ]]; then
-            subshell="log_verbose"
-        else
-            subshell="log_silent"
-        fi
-
-        #if log true, log_alert in end.
-        if [[ "$no_log" = false ]]; then
-            log_alert="log_alert"
-        fi
-    elif [[ "$no_log" = true ]]; then
-        #Test is verbose
-        if [[ "$verbose" = true ]]; then
-            subshell="no_log_verbose"
-        else
-            subshell="no_log"
-        fi
+    if [[ "$mode" == "silent_no_log" ]]; then
+        ($subshell_command 2>&1 >/dev/null) || true &
     else
-        error_13
+        # Check if new_log variable is true
+        if [[ "$new_log" == true ]]; then
+            log_file="${dir_log}/new-log-${index_line}.log"
+            > "$log_file" # Clear existing log file
+        fi
+
+        if [[ "$mode" == "silent" ]]; then
+            ($subshell_command 2>&1 >/dev/null) >> "$log_file" || true & # Redirect command output to log file and ignore errors
+        else
+            if [[ "$mode" == "no_log_verbose" ]]; then
+                # Redirect command output to a subshell and read the output
+                # If the exit code is non-zero, print the output to console
+                ($subshell_command 2>&1 >/dev/null) | {
+                    read -r task
+                    if [ $? -ne 0 ]; then
+                        sleep 1s
+                        echo -e "[ $(date) ]\nLine:$index_line\n$task\n"
+                    fi
+                } &
+            else # verbose
+                # Redirect command output to a subshell and read the output
+                # If the exit code is non-zero, print the output to console and append to log file
+                ($subshell_command 2>&1 >/dev/null) | {
+                    read -r task
+                    if [ $? -ne 0 ]; then
+                        sleep 1s
+                        echo -e "[ $(date) ]\nLine:$index_line\n$task\n" | tee -a "$log_file"
+                    fi
+                } &
+            fi
+        fi
     fi
 }
-function no_log(){
-    (
-    task=$($subshell_command 2> /dev/null)
-    ) &
-}
-function no_log_verbose(){
-    (
-    task=$($subshell_command 2>&1)
-    sleep 1s
-    echo -e "[ $(date) ]\nLine:$index_line\n$task\n"
-    ) &
-}
-function log_verbose(){
-    (
-    task=$($subshell_command 2>&1)
-    sleep 1s
-    echo -e "[ $(date) ]\nLine:$index_line\n$task\n" | tee -a "${dir_log}/line-$index_line.log"
-    ) &
-}
-function log_silent(){
-    (
-    task=$($subshell_command 2>&1)
-    echo -e "[ $(date) ]\nLine:$index_line\n$task\n" >> "${dir_log}/line-$index_line.log"
-    ) &
-}
+#================= Processing =================#
 function progress(){     #Display.
-    percent=$(( $index_line * 100 / $total_lines ))
-
     printf "Total [\033[1m%s\033[0m] [Max: \033[1m%s\033[0m / \033[1;32m%s\033[0m Actives] \r" "$total_lines" "$max_parallel" "$active_parallel"
-
 }
 #================= functions process =================#
 function active_tentacles(){
     export active_parallel      #Shows the total of commands running in the background.
     
     #It counts the number of PIDS in the background more the current one.
-    jobs=($(jobs -r -p))
+    local jobs=($(jobs -r -p))
     active_parallel="${#jobs[@]}"
 }
 function tentacles(){
@@ -301,23 +280,25 @@ function tentacles(){
     export total_lines          #Shows the total lines of file.
 
     for file_input in "${list_of_files_input[@]}"; do #Start program with all passed parameters.
-        index_line=0 
-        log_options
+        index_line=0
+        echo -e "$file_input"
+        #log_options
         while IFS= read -r line_input; do #Read the lines of the current file one by one and start.
             subshell_command="$fixed_command_input $line_input $force_y"
             total_lines=$(wc --lines < $file_input)
             active_tentacles
             if [[ "$max_parallel" -eq "0" ]]; then  #Starts with the parallel limit 0.
-                $subshell
+                run_command
             else                                    #Starts with parallel limit.
                 while [[ "$active_parallel" -ge "$max_parallel" ]]; do
                     wait -n
                     active_tentacles
                     $progress
                 done
-                $subshell
+                run_command
             fi
             $progress
+            ((index_line++))
         done < "$file_input"
         while [[ "$active_parallel" -ne "0" ]]; do
             wait -n
@@ -326,10 +307,8 @@ function tentacles(){
         done
         active_parallel=0
     done
-
     #A completion alert sounds and exits.
     alert_sound
-    $log_alert
     exit 0
 }
 #================= Option =================#
