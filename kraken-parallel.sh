@@ -224,7 +224,7 @@ function test_options(){
 function run_command() {
     local log_file="${dir_log}/line-${index_line}.log"
 
-    if [[ "$mode" == "silent_no_log" ]]; then
+    if [[ "$mode" == "silent_no_log" ]]; then                               # silent no log
         ($subshell_command 2>&1 >/dev/null) || true &
     else
         # Check if new_log variable is true
@@ -233,12 +233,10 @@ function run_command() {
             > "$log_file" # Clear existing log file
         fi
 
-        if [[ "$mode" == "silent" ]]; then
-            ($subshell_command 2>&1 >/dev/null) >> "$log_file" || true & # Redirect command output to log file and ignore errors
+        if [[ "$mode" == "silent" ]]; then                                  # silent
+            ($subshell_command 2>&1 >/dev/null) >> "$log_file" || true &
         else
-            if [[ "$mode" == "no_log_verbose" ]]; then
-                # Redirect command output to a subshell and read the output
-                # If the exit code is non-zero, print the output to console
+            if [[ "$mode" == "no_log_verbose" ]]; then                      # no log verbose
                 ($subshell_command 2>&1 >/dev/null) | {
                     read -r task
                     if [ $? -ne 0 ]; then
@@ -246,9 +244,7 @@ function run_command() {
                         echo -e "[ $(date) ]\nLine:$index_line\n$task\n"
                     fi
                 } &
-            else # verbose
-                # Redirect command output to a subshell and read the output
-                # If the exit code is non-zero, print the output to console and append to log file
+            else                                                            # verbose
                 ($subshell_command 2>&1 >/dev/null) | {
                     read -r task
                     if [ $? -ne 0 ]; then
