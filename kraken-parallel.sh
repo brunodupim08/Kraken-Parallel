@@ -224,8 +224,9 @@ function test_options(){
 function run_command() {
     local log_file="${dir_log}/line-${index_line}.log"
 
-    if [[ "$mode" == "silent_no_log" ]]; then                               # silent no log
-        ($subshell_command 2>&1 >/dev/null) || true &
+    if [[ "$mode" == "silent_no_log" ]]; then 
+        # silent no log
+        ($subshell_command >/dev/null 2>&1) &
     else
         # Check if new_log variable is true
         if [[ "$new_log" == true ]]; then
@@ -233,10 +234,12 @@ function run_command() {
             > "$log_file" # Clear existing log file
         fi
 
-        if [[ "$mode" == "silent" ]]; then                                  # silent
-            ($subshell_command 2>&1 >/dev/null) >> "$log_file" || true &
+        if [[ "$mode" == "silent" ]]; then
+            # silent
+            ($subshell_command >/dev/null 2>&1) >> "$log_file" &
         else
-            if [[ "$mode" == "no_log_verbose" ]]; then                      # no log verbose
+            if [[ "$mode" == "no_log_verbose" ]]; then
+                # no log verbose
                 ($subshell_command 2>&1 >/dev/null) | {
                     read -r task
                     if [ $? -ne 0 ]; then
@@ -244,7 +247,8 @@ function run_command() {
                         echo -e "[ $(date) ]\nLine:$index_line\n$task\n"
                     fi
                 } &
-            else                                                            # verbose
+            else
+                # verbose
                 ($subshell_command 2>&1 >/dev/null) | {
                     read -r task
                     if [ $? -ne 0 ]; then
@@ -256,6 +260,7 @@ function run_command() {
         fi
     fi
 }
+
 #================= Processing =================#
 function progress(){     #Display.
     printf "Total [\033[1m%s\033[0m] [Max: \033[1m%s\033[0m / \033[1;32m%s\033[0m Actives] \r" "$total_lines" "$max_parallel" "$active_parallel"
