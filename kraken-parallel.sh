@@ -19,6 +19,8 @@ verbose=false
 max_parallel=20
 null_lines=false
 
+
+trap 'echo ""; exit' INT TERM
 #================= functions information =================#
 function usage(){
     echo "
@@ -49,7 +51,7 @@ function usage(){
                             If the value is 0, it will be illimited and can lock your
                             system if you have a very large list of commands.
     
-    -v|--verbose)           Verbose mode.
+    -v|--verbose)           Verbose run_mode.
 
     --force-y)              Kraken-Parallel will force -y at the end of all commands
                             to have no confirmation prompts.
@@ -158,8 +160,9 @@ function error_6(){     #directory conflict.
 }
 #================= functions test =================#
 function test_options(){
-    export progress     #Shows the progress command.
-    export mode         #modo "silent", "verbose", "no_log_verbose" or "silent_no_log"
+    export progress         #Shows the progress command.
+    export run_mode         #run_mode "silent", "verbose", "no_log_verbose" or "silent_no_log"    
+
     #options null test.
     if [[ -z $fixed_command_input || -z "${list_of_files_input[@]}" ]]; then
         error_1
@@ -181,21 +184,6 @@ function test_options(){
         fi
     else
         error_4
-    fi
-
-    # "silent", "verbose", "no_log_verbose" or "silent_no_log"
-    if [[ "$no_log" == true && "$verbose" == false ]]; then
-        mode="silent_no_log"
-        progress="progress"
-    elif [[ "$no_log" == true && "$verbose" == true ]]; then
-        mode="no_log_verbose"
-        progress=""
-    elif [[ "$verbose" == true ]]; then
-        mode="verbose"
-        progress=""
-    else
-        mode="silent"
-        progress="progress"
     fi
 
     #Force -y.
@@ -220,50 +208,66 @@ function test_options(){
     #If none of the tests fail, it runs the program.
     tentacles
 }
-#================= Run =================#
-function run_command() {
-    local log_file="${dir_log}/line-${index_line}.log"
+#================= run_mode =================#
+function run_mode(){
+    export dir_log="${log_path}/Kraken-Parallel-${USER}/${file_input##*/}-log"      #directory log.
+    export log_file="${dir_log}/line-${index_line}.log"                             #file log
 
-    if [[ "$mode" == "silent_no_log" ]]; then 
-        # silent no log
-        ($subshell_command >/dev/null 2>&1) &
+    # "silent", "verbose", "no_log_verbose" or "silent_no_log"
+    if [[ "$no_log" == true && "$verbose" == false ]]; then
+        run_mode="no_log_silent"
+        progress="progress"
+    elif [[ "$no_log" == true && "$verbose" == true ]]; then
+        run_mode="no_log_verbose"
+        progress=""
     else
+        #Tests if the log folder exists, if it doesn't exist it creates it.
+        if [[ ! -d "$dir_log" ]]; then
+            mkdir -p -m 760 "${dir_log}" > /dev/null || error_5
         # Check if new_log variable is true
-        if [[ "$new_log" == true ]]; then
+        elif [[ "$new_log" == true ]]; then
+            # Clear existing log file
             log_file="${dir_log}/new-log-${index_line}.log"
-            > "$log_file" # Clear existing log file
+            > "$log_file" 
         fi
 
-        if [[ "$mode" == "silent" ]]; then
-            # silent
-            ($subshell_command >/dev/null 2>&1) >> "$log_file" &
+        if [[ "$verbose" == true ]]; then
+            run_mode="verbose"
+            progress=""
         else
-            if [[ "$mode" == "no_log_verbose" ]]; then
-                # no log verbose
-                ($subshell_command 2>&1 >/dev/null) | {
-                    read -r task
-                    if [ $? -ne 0 ]; then
-                        sleep 1s
-                        echo -e "[ $(date) ]\nLine:$index_line\n$task\n"
-                    fi
-                } &
-            else
-                # verbose
-                ($subshell_command 2>&1 >/dev/null) | {
-                    read -r task
-                    if [ $? -ne 0 ]; then
-                        sleep 1s
-                        echo -e "[ $(date) ]\nLine:$index_line\n$task\n" | tee -a "$log_file"
-                    fi
-                } &
-            fi
+            run_mode="silent"
+            progress="progress"
         fi
     fi
 }
-
+function no_log_silent(){
+    (
+    task=$($subshell_command 2> /dev/null)
+    ) &
+}
+function no_log_verbose(){
+    (
+    task=$($subshell_command 2>&1)
+    sleep 1s
+    echo -e "[ $(date) ]\nLine:$index_line\n$task\n"
+    ) &
+}
+function verbose(){
+    (
+    task=$($subshell_command 2>&1)
+    sleep 1s
+    echo -e "[ $(date) ]\nLine:$index_line\n$task\n" | tee -a "${dir_log}/line-$index_line.log"
+    ) &
+}
+function silent(){
+    (
+    task=$($subshell_command 2>&1)
+    echo -e "[ $(date) ]\nLine:$index_line\n$task\n" >> "${dir_log}/line-$index_line.log"
+    ) &
+}
 #================= Processing =================#
 function progress(){     #Display.
-    printf "Total [\033[1m%s\033[0m] [Max: \033[1m%s\033[0m / \033[1;32m%s\033[0m Actives] \r" "$total_lines" "$max_parallel" "$active_parallel"
+    printf "[Total: \033[1m%s\033[0m / \033[1;32m%s\033[0m] [Max: \033[1m%s\033[0m / \033[1;32m%s\033[0m Actives] \r" "$total_lines" "$index_line" "$max_parallel" "$active_parallel"
 }
 #================= functions process =================#
 function active_tentacles(){
@@ -281,22 +285,24 @@ function tentacles(){
     export total_lines          #Shows the total lines of file.
 
     for file_input in "${list_of_files_input[@]}"; do #Start program with all passed parameters.
+        
         index_line=0
         echo -e "$file_input"
-        #log_options
+        total_lines=$(wc --lines < $file_input)
+        run_mode
+
         while IFS= read -r line_input; do #Read the lines of the current file one by one and start.
             subshell_command="$fixed_command_input $line_input $force_y"
-            total_lines=$(wc --lines < $file_input)
             active_tentacles
             if [[ "$max_parallel" -eq "0" ]]; then  #Starts with the parallel limit 0.
-                run_command
+                $run_mode
             else                                    #Starts with parallel limit.
                 while [[ "$active_parallel" -ge "$max_parallel" ]]; do
                     wait -n
                     active_tentacles
                     $progress
                 done
-                run_command
+                $run_mode
             fi
             $progress
             ((index_line++))
