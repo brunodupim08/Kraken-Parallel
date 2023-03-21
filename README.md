@@ -28,11 +28,11 @@ This allows for greater use of cpu and cores to perform repetitive tasks with la
 
     -m|--max-parallel)      Limit parallel.
                             Limits the maximum number of commands in the background.
-                            By default the limit is 20 commands.
+                            By default the limit is 50 commands.
                             If the value is 0, it will be illimited and can lock your
                             system if you have a very large list of commands.
     
-    -v|--verbose)           Verbose mode.
+    -v|--verbose)           Verbose run_mode.
 
     --force-y)              Kraken-Parallel will force -y at the end of all commands
                             to have no confirmation prompts.
