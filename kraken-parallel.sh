@@ -16,7 +16,7 @@ log_path="/tmp"
 new_log=false
 no_log=false
 verbose=false
-max_parallel=20
+max_parallel=50
 null_lines=false
 
 
@@ -47,7 +47,7 @@ function usage(){
 
     -m|--max-parallel)      Limit parallel.
                             Limits the maximum number of commands in the background.
-                            By default the limit is 10 commands.
+                            By default the limit is 50 commands.
                             If the value is 0, it will be illimited and can lock your
                             system if you have a very large list of commands.
     
@@ -267,7 +267,7 @@ function silent(){
 }
 #================= Processing =================#
 function progress(){     #Display.
-    printf "[Total: \033[1m%s\033[0m / \033[1;32m%s\033[0m] [Max: \033[1m%s\033[0m / \033[1;32m%s\033[0m Actives] \r" "$total_lines" "$index_line" "$max_parallel" "$active_parallel"
+    printf "  [Total: \033[1m%s\033[0m / \033[1;32m%s\033[0m] [Max: \033[1m%s\033[0m / \033[1;32m%s\033[0m Actives] \r" "$total_lines" "$index_line" "$max_parallel" "$active_parallel"
 }
 #================= functions process =================#
 function active_tentacles(){
@@ -292,6 +292,8 @@ function tentacles(){
         run_mode
 
         while IFS= read -r line_input; do #Read the lines of the current file one by one and start.
+            ((index_line++))
+            [[ -z "$line_input" && "$null_lines" == "false" ]] && continue;        # null lines shift
             subshell_command="$fixed_command_input $line_input $force_y"
             active_tentacles
             if [[ "$max_parallel" -eq "0" ]]; then  #Starts with the parallel limit 0.
@@ -305,7 +307,6 @@ function tentacles(){
                 $run_mode
             fi
             $progress
-            ((index_line++))
         done < "$file_input"
         while [[ "$active_parallel" -ne "0" ]]; do
             wait -n
