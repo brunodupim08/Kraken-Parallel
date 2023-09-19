@@ -11,7 +11,7 @@
 #max_parallel must be informed before starting octopus.
 #null_lines must be notified before starting octopus.
 
-version="v1.1.0"
+version="v1.1.1"
 log_path="/tmp"
 new_log=false
 no_log=false
@@ -205,8 +205,6 @@ function test_options(){
         done
         concluded_alert
     fi
-    #If none of the tests fail, it runs the program.
-    tentacles
 }
 #================= run_mode =================#
 function run_mode(){
@@ -278,47 +276,64 @@ function active_tentacles(){
     active_parallel="${#jobs[@]}"
 }
 function tentacles(){
-    export line_input           #Shows the line current.
-    export file_input           #Shows the file current.
-    export subshell_command     #Shows the subshell command.
-    export index_line           #Shows the index of line current.
-    export total_lines          #Shows the total lines of file.
+    export line_input           # Shows the current line.
+    export file_input           # Shows the current file.
+    export subshell_command     # Shows the subshell command.
+    export index_line           # Shows the index of the current line.
+    export total_lines          # Shows the total lines of the file.
 
-    for file_input in "${list_of_files_input[@]}"; do #Start program with all passed parameters.
-        
-        index_line=0
+    # Create a variable to store lines from files
+    all_lines=()
+
+    for file_input in "${list_of_files_input[@]}"; do # Loop to read files.
+
         echo -e "$file_input"
-        total_lines=$(wc --lines < $file_input)
-        run_mode
 
-        while IFS= read -r line_input; do #Read the lines of the current file one by one and start.
-            ((index_line++))
-            [[ -z "$line_input" && "$null_lines" == "false" ]] && continue;        # null lines shift
-            subshell_command="$fixed_command_input $line_input $force_y"
-            active_tentacles
-            if [[ "$max_parallel" -eq "0" ]]; then  #Starts with the parallel limit 0.
-                $run_mode
-            else                                    #Starts with parallel limit.
-                while [[ "$active_parallel" -ge "$max_parallel" ]]; do
-                    wait -n
-                    active_tentacles
-                    $progress
-                done
-                $run_mode
-            fi
-            $progress
+        # Create a temporary variable to store lines from the current file
+        lines=()
+
+        # Read the entire content of the file into the 'lines' temporary variable
+        while IFS= read -r line; do
+            [[ -z "$line" && "$null_lines" == "false" ]] && continue;        # Skip null lines if 'null_lines' is set to 'false'.
+            lines+=("$line")
         done < "$file_input"
-        while [[ "$active_parallel" -ne "0" ]]; do
-            wait -n
-            active_tentacles
-            $progress
-        done
-        active_parallel=0
+
+        # Append lines from the current file to the 'all_lines' variable
+        all_lines+=("${lines[@]}")
+
     done
-    #A completion alert sounds and exits.
+
+    total_lines="${#all_lines[@]}"
+    index_line=0
+
+    # Now you can use the 'all_lines' variable in a separate loop to process the lines
+    for line_input in "${all_lines[@]}"; do
+        ((index_line++))
+        subshell_command="$fixed_command_input $line_input $force_y"
+        active_tentacles
+        if [[ "$max_parallel" -eq "0" ]]; then  # Start with parallelism limit equal to 0.
+            $run_mode
+        else                                    # Start with a parallelism limit.
+            while [[ "$active_parallel" -ge "$max_parallel" ]]; do
+                active_tentacles
+                $progress
+            done
+            $run_mode
+        fi
+        $progress
+    done
+
+    while [[ "$active_parallel" -ne "0" ]]; do
+        active_tentacles
+        $progress
+    done
+    active_parallel=0
+
+    # A completion alert is issued, and the program exits.
     alert_sound
     exit 0
 }
+
 #================= Option =================#
 [[ "${#}" -eq "0" ]] && error_1
 indf=0
@@ -376,3 +391,6 @@ while [[ "${#}" -ne "0" ]]; do
     shift
 done
 test_options
+run_mode
+#If none of the tests fail, it runs the program.
+tentacles
