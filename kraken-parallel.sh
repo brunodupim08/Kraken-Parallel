@@ -99,8 +99,10 @@ function usage(){
                             Some programs and commands cannot contain -y at the end
                             Be Careful !!!
 
-    -l)                     Not create log.
+    -l)                     Create log.
 
+    -L)                     Create a log in a new path.
+    
     "
 }
 
