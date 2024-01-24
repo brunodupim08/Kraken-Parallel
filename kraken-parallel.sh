@@ -111,22 +111,22 @@ function progress() {
     local index_line="$3"
     local active_parallel="$4"
     local percent=$(( ((index_line - active_parallel) * 100) / total_lines ))
-    
-    # Definir códigos de formatação ANSI diretamente nas variáveis locais usando tput
+
+    # Set ANSI formatting codes directly in local variables using tput
     local red="\033[1;31m"
     local bi_blue="\033[1;94m"
     local bi_yellow="\033[1;93m"
     local reset="\033[0m"
-    
-    # Cores
+
+    # Colors
     local open_bracket="${bi_yellow}[${reset}"
     local close_bracket="${bi_yellow}]${reset}"
     local slash="${bi_yellow}/${reset}"
-    
-    tput sc  # Salvar posição do cursor
-    printf "    ${open_bracket}${bi_blue}File:${reset} %s ${close_bracket}  ${open_bracket}${bi_blue}Total:${reset} %d "${slash}" %d ${close_bracket}  ${open_bracket}${bi_blue}Max:${reset} %d "${slash}" %d ${bi_blue}Actives${reset} ${close_bracket}  ${open_bracket}${bi_blue}Progresso:${reset} %d%% ${close_bracket}" \
+
+    tput sc  # Save cursor position
+    printf "    ${open_bracket}${bi_blue}File:${reset} %s ${close_bracket}  ${open_bracket}${bi_blue}Total:${reset} %d "${slash}" %d ${close_bracket}  ${open_bracket}${bi_blue}Max:${reset} %d "${slash}" %d ${bi_blue}Actives${reset} ${close_bracket}  ${open_bracket}${bi_blue}Progress:${reset} %d%% ${close_bracket}" \
     "$(basename "$file")"  "$index_line" "$total_lines" "$active_parallel" "$max_parallel" "$percent"
-    tput rc  # Restaurar posição do cursor
+    tput rc  # Restore cursor position
 }
 
 function run_tentacle(){
@@ -145,7 +145,7 @@ function run_tentacle(){
         local log_file="$log_path/$file-Line_$index_line.log"
 
         if [[ ! -d "$log_path" ]]; then
-            mkdir -p -m 700 "$log_path" > /dev/null || echo -e "Unable to create directory $log_path"; exit 1
+            mkdir -p -m 700 "$log_path" > /dev/null || { echo -e "Unable to create the directory $log_path"; exit 1; }
         fi
         (
             echo -e "[ "$command" ]\n" >> "$log_file"
@@ -180,7 +180,7 @@ function main() {
                     done
                     for file in "${files[@]}"; do
                         if [[ ! -e "$file" ]] || [[ ! -r "$file" ]]; then
-                            echo -e "O arquivo $file não existe ou não tem permissão de leitura."; exit 1
+                            echo -e "The file $file does not exist or does not have read permission."; exit 1
                         elif grep -w 'sudo' "$file" > /dev/null; then
                             echo -e "The $file file has sudo, do not use sudo within the file."; exit 1
                         fi
@@ -194,7 +194,7 @@ function main() {
                     if [[ $OPTARG =~ ^[0-9]+$ ]] ; then
                         max_parallel="$OPTARG"
                     else
-                        echo "Por favor, digite um número inteiro válido na opção -m."; exit 1
+                        echo "Please enter a valid integer for the -m option."; exit 1
                     fi
                     ;;
                 v)
@@ -211,17 +211,17 @@ function main() {
                     fi
                     ;;
                 \?)
-                    echo "Opção inválida: -$OPTARG"; exit 1                                        # Código a ser executado em caso de opção desconhecida
+                    echo "Invalid option: -$OPTARG"; exit 1                                        # Code to be executed in case of unknown option
                     ;;
                 :)
-                    echo "A opção -$OPTARG requer um argumento."; exit 1                           # Código a ser executado em caso de opção faltando argumento
+                    echo "Option -$OPTARG requires an argument."; exit 1                           # Code to be executed in case of missing argument for an option
                     ;;
             esac
         done
         if ! [[ $c == true && $f == true ]]; then
-            echo "As opções -c e -f são obrigatórias."; exit 1
+            echo "Options -c and -f are mandatory."; exit 1
         else
-            tput civis                                                                             # Esconder o cursor
+            tput civis                                                                             # Hide the cursor
             logo
             echo "    STARTED ..."
             for file in "${files[@]}"; do
@@ -234,13 +234,13 @@ function main() {
                         continue
                     else
                         local command="$fixed_command $line $y"
-                        local active_parallel=$(jobs -r | wc -l)                                   # Obtém os PIDs dos processos em execução em segundo plano, excluindo o PID do script
+                        local active_parallel=$(jobs -r | wc -l)                                   # Get the PIDs of background processes, excluding the script's PID
                         if [[ "$max_parallel" -eq "0" ]]; then                                     # Start with parallelism limit equal to 0.
                             progress "$file" "$total_lines" "$index_line" "$active_parallel"
                             run_tentacle "$command" "$log" "$file" "$index_line"
                         else
                             while true; do
-                                local active_parallel=$(jobs -r | wc -l)                           # Obtém os PIDs dos processos em execução em segundo plano, excluindo o PID do script
+                                local active_parallel=$(jobs -r | wc -l)                           # Get the PIDs of background processes, excluding the script's PID
                                 progress "$file" "$total_lines" "$index_line" "$active_parallel"
                                 if [[ $active_parallel -lt $max_parallel ]]; then
                                     run_tentacle "$command" "$log" "$file" "$index_line"
@@ -253,7 +253,7 @@ function main() {
                     fi
                 done <<< "$(cat $file; echo "")"                                                   # Open file
                 while true; do
-                    local active_parallel=$(jobs -r | wc -l)                                       # Obtém os PIDs dos processos em execução em segundo plano, excluindo o PID do script
+                    local active_parallel=$(jobs -r | wc -l)                                       # Get the PIDs of background processes, excluding the script's PID
                     progress "$file" "$total_lines" "$index_line" "$active_parallel"
                     if [[ $active_parallel -eq "0" ]]; then
                         printf "\r\033[K $fixed_command $file    Concluded!\n"
@@ -263,7 +263,7 @@ function main() {
                     fi
                 done
             done
-            tput cnorm                                                                             # Mostrar o cursor
+            tput cnorm                                                                             # Show the cursor
         fi
     fi
 }
