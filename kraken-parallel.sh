@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 version="2.0"
-max_parallel="50"
+max_parallel="10"
 log=false
 log_path="/tmp/Kraken-Parallel/${USER}"
 
@@ -25,38 +25,7 @@ function version(){
     local version="\033[1;94mv$version\033[0m"
     local author="\033[1;94mBruno Dupim\033[0m"
     local project="\033[1;94mhttps://github.com/brunodupim08/Kraken-Parallel.git\033[0m"
-    echo -e "\033[1;94m
-                       .                                  .                               
-                       c                                 .,             .,                
-                        ;.              ......         .,,.   ..,;::cccl;                 
-                         .::;'..    .;cllllllll:,.  .,:,....;clll:;'                      
-               ...'...     .':ccc.'cllllllllllllll;.cc.  .clll;'.                         
-                    ',::,.    'l;;lclllllllllll:.ll'lc  'llll.              .......       
-                       .cl;    l:;l.:llllllllll: ll;:l. llll'           .':loc            
-   .                    .loc..c;:oc.coooooooooool;lo:;c.oooo,         'coo:.              
-    ;                    :oo:;::oocoooooooooooooooooo'l;coool.      ,loo:.                
-    ,o:,,,:cclcc;'.      looo'c;oooooooooooooooooool,cll,loooo;.  .looo,.                 
-     .ooooooooooooo:.   ,oooc,l;.ooo,cooooooooc,ol,   'll;:ooooo;.looo;                   
-              ':odddo'.:oooo,l;  .;oo,:oooooo;,l,';;,.  llc;loooooc:lo                    
-                .cdcc:ooool;cc  ;,..:o':oooo:,c.;;,coo   ooo::loooooc,                    
-                ..:looooo::oo. ::.c,.lo.cool.oc;':c.lo   ooooo':oddddo,                   
-                .cdddddl,looo'  :'OKxd'c;od;o,c0lNl.    'oooo::d;dddddd'                  
-                cdddddo;;ooool.   :oox. :odo'.lkl.    .:ooooc;dd,ddddddo                  
-               .dddddd;do;loooo,.   ;ddl:ddd:ddd;  .,cooooo::dd:lddddddd                  
-               ,dddddd;dddc:cooool:,.odddddddddd'dccccllcccldd:lddddddd,                  
-               .dddddd;xxxxxocccccc;:dddlddoodddo:ldxdoodxxoccdddddddd;                   
-                odddddlcxxxxxxxxxdccdddd:dd:ddddddoccllllcclddddddddd    ..           ,   
-         ...    .ddddddlcloddollclddddddoxdoxxxxxdxxxxxxxxxxxxxxxxd..'cdxxxxdc;'...,cd    
-     .;coxxxdl.  .dxxxxxxdlllldxxdoxxxxxxxxxxxxxoclxxxxxxxxxxxxxo;.'oxxxxxxddxxxxxxxo     
-           .xxx,   :xxxxxxxxxxxxd:lxxxxxxxxxxxxx.oxxxxxxxxxxxo:' .lxxxx;                  
-             cxxc   .:oxxxxxxxc,.cxxxxxxxxxxxxxxc..,;::::;,..  .cxxxxo                    
-              :xxd;     ',,'.. 'oxxxxxxxxxxxxxxxxxl;'.......,:oxxxxx,                     
-               xxxxdc'.    .':dxxxxxxxd:,.:dxxxxxxxxxxxxxxxxxxxxxxx.                      
-                dxxxxxxxoodxxxxxxxxxd,     .:xxxxxxxxxxxxxxxxxxxxx.                       
-                  oxxxxxxxxkxkxxxxd:..       .;coxkkkkkkkkkkkkkd                          
-                    :lxkkkkkkkkdl;..           ...';:cloooo;                              
-                          .,'.                                                   
-    \033[0m"
+ 
     echo -e "\033[1;94m
     #=================#
     # Kraken-Parallel #
@@ -78,6 +47,7 @@ function usage(){
 
     Note: 
             If the command or program requires "-y" confirmation, use --force-y.
+            Do not use sudo within the file.
 
 
     -c)                     Fixed Command.
@@ -90,7 +60,7 @@ function usage(){
 
     -m)                     Limit parallel.
                             Limits the maximum number of commands in the background.
-                            By default the limit is 50 commands.
+                            By default the limit is 10 commands.
                             If the value is 0, it will be illimited and can lock your
                             system if you have a very large list of commands.
 
@@ -99,7 +69,7 @@ function usage(){
                             Some programs and commands cannot contain -y at the end
                             Be Careful !!!
 
-    -l)                     Create log.
+    -l)                     Create log in /tmp/Kraken-Parallel/${USER}.
 
     -L)                     Create a log in a new path.
     
@@ -140,7 +110,7 @@ function run_tentacle(){
 
     if [[ $log == false ]]; then
         (
-            $command 2> /dev/null
+            $command > /dev/null 2>&1
         ) &
     else
         local date=$(date +"%Y-%m-%d_%H:%M:%S")
@@ -213,36 +183,45 @@ function main() {
                     fi
                     ;;
                 \?)
-                    echo "Invalid option: -$OPTARG"; exit 1                                        # Code to be executed in case of unknown option
+                    # Code to be executed in case of unknown option
+                    echo "Invalid option: -$OPTARG"; exit 1
                     ;;
                 :)
-                    echo "Option -$OPTARG requires an argument."; exit 1                           # Code to be executed in case of missing argument for an option
+                    # Code to be executed in case of missing argument for an option
+                    echo "Option -$OPTARG requires an argument."; exit 1
                     ;;
             esac
         done
         if ! [[ $c == true && $f == true ]]; then
             echo "Options -c and -f are mandatory."; exit 1
         else
-            tput civis                                                                             # Hide the cursor
+            # Hide the cursor
+            tput civis
             logo
             echo "    STARTED ..."
             for file in "${files[@]}"; do
-                local total_lines=$(awk 'NF{p=NR} END{print p}' "$file")                           # Total lines in file
-                local index_line="0"                                                               # Index line
+                # Total lines in file
+                local total_lines=$(awk 'NF{p=NR} END{print p}' "$file")
+                local index_line="0"
                 
-                while IFS= read -r line; do                                                        # Read line and Index line increment
+                # Read line and Index line increment
+                while IFS= read -r line; do
                     ((index_line++))
-                    if [[ -z "$line" ]]; then                                                      # Skip null lines
+                    # Skip null lines
+                    if [[ -z "$line" ]]; then
                         continue
                     else
                         local command="$fixed_command $line $y"
-                        local active_parallel=$(jobs -r | wc -l)                                   # Get the PIDs of background processes, excluding the script's PID
-                        if [[ "$max_parallel" -eq "0" ]]; then                                     # Start with parallelism limit equal to 0.
+                        # Get the PIDs of background processes, excluding the script's PID
+                        local active_parallel=$(jobs -r | wc -l)
+                        # Start with parallelism limit equal to 0.
+                        if [[ "$max_parallel" -eq "0" ]]; then
                             progress "$file" "$total_lines" "$index_line" "$active_parallel"
                             run_tentacle "$command" "$log" "$file" "$index_line"
                         else
                             while true; do
-                                local active_parallel=$(jobs -r | wc -l)                           # Get the PIDs of background processes, excluding the script's PID
+                                # Get the PIDs of background processes, excluding the script's PID
+                                local active_parallel=$(jobs -r | wc -l)
                                 progress "$file" "$total_lines" "$index_line" "$active_parallel"
                                 if [[ $active_parallel -lt $max_parallel ]]; then
                                     run_tentacle "$command" "$log" "$file" "$index_line"
@@ -253,9 +232,10 @@ function main() {
                             done
                         fi
                     fi
-                done <<< "$(cat $file; echo "")"                                                   # Open file
+                done <<< "$(cat $file; echo "")" # Open file
                 while true; do
-                    local active_parallel=$(jobs -r | wc -l)                                       # Get the PIDs of background processes, excluding the script's PID
+                    # Get the PIDs of background processes, excluding the script's PID
+                    local active_parallel=$(jobs -r | wc -l)                                       
                     progress "$file" "$total_lines" "$index_line" "$active_parallel"
                     if [[ $active_parallel -eq "0" ]]; then
                         printf "\r\033[K $fixed_command $file    Concluded!\n"
@@ -265,7 +245,8 @@ function main() {
                     fi
                 done
             done
-            tput cnorm                                                                             # Show the cursor
+            # Show the cursor
+            tput cnorm
         fi
     fi
 }
